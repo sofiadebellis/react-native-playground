@@ -31,6 +31,8 @@ import {
   FormControlLabelText,
 } from "@/components/ui/form-control";
 import { Input, InputField } from "@/components/ui/input";
+import { Card } from "@/components/ui/card";
+import { ScrollView } from "react-native";
 interface TodoItem {
   id: number;
   title: string;
@@ -63,6 +65,7 @@ const ToDoApp = () => {
   // Function to load todos from AsyncStorage
   const loadTodos = async () => {
     try {
+      await AsyncStorage.clear();
       const savedTodos = await AsyncStorage.getItem("todos");
       if (savedTodos) {
         setTodos(JSON.parse(savedTodos));
@@ -85,6 +88,17 @@ const ToDoApp = () => {
 
   // Function to add or update a todo
   const addOrUpdateTodo = () => {
+    if (!title.trim() && !description.trim()) {
+      alert("Please fill out both the title and description too add a todo.");
+      return;
+    } else if (!title.trim()) {
+      alert("Please fill out the title to add a todo.");
+      return;
+    } else if (!description.trim()) {
+      alert("Please fill out the description to add a todo.");
+      return;
+    }
+
     if (editingId !== null) {
       const updatedTodos = todos.map((todo) =>
         todo.id === editingId
@@ -113,9 +127,12 @@ const ToDoApp = () => {
       }
       setCounter(counter + 1);
     }
+
+    // Clear form fields after adding/updating
     setTitle("");
     setDescription("");
     setImage(null);
+    setShowAddModal(false);
   };
 
   // Function to delete a todo
@@ -163,24 +180,71 @@ const ToDoApp = () => {
 
   return (
     <>
-      <VStack className="flex-1 bg-secondary-0 items-center p-2" space="lg">
+      <VStack className="flex-1 bg-secondary-0 items-center pt-2" space="lg">
         <HStack className="w-full p-5 bg-secondary-0 items-center" space="md">
-          <Heading text-typography-950 size={"3xl"}>TickItOff</Heading>
+          <Heading text-typography-950 size={"3xl"}>
+            TickItOff
+          </Heading>
           <Icon as={CheckCircleIcon} size="xl" />
         </HStack>
         {hasTodos ? (
+          <ScrollView
+            style={{ width: "100%" }}
+            contentContainerStyle={{ alignItems: "center" }}
+          >
+            {todos.map((todo) => (
+              <Card
+                key={todo.id}
+                size="lg"
+                variant="outline"
+                className="m-3 w-full"
+                style={{ maxWidth: "90%", width: "100%" }}
+              >
+                <HStack
+                  space="md"
+                  className="justify-between w-full"
+                  style={{
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                  }}
+                >
+                  {/* Left-aligned content: Title and Description */}
+                  <VStack space="md" style={{ flex: 1 }}>
+                    <Heading
+                      size="lg"
+                      className="mb-1"
+                      style={{ textAlign: "left" }}
+                    >
+                      {todo.title}
+                    </Heading>
+                    <Text size="lg" style={{ textAlign: "left" }}>
+                      {todo.description}
+                    </Text>
+                  </VStack>
+
+                  {/* Right-aligned circular image */}
+                  {todo.image && (
+                    <Image
+                      source={{ uri: todo.image }}
+                      alt="Todo Image"
+                      style={{
+                        width: 100,
+                        height: 100,
+                        borderRadius: 50, // Make the image circular
+                      }}
+                    />
+                  )}
+                </HStack>
+              </Card>
+            ))}
+          </ScrollView>
+        ) : (
           <Box
             className="w-full h-full p-1 items-center"
             style={{ justifyContent: "flex-start", paddingTop: "70%" }}
           >
             <Text className="primary-0" size={"lg"}>
               No todos yet. Add one now!
-            </Text>
-          </Box>
-        ) : (
-          <Box className="w-full p-5 bg-secondary-0 items-center">
-            <Text className="primary-0" size={"lg"}>
-              Woweeeeeeee we have tasks to do
             </Text>
           </Box>
         )}
@@ -211,19 +275,29 @@ const ToDoApp = () => {
                 size="lg"
                 isDisabled={false}
                 isReadOnly={false}
-                isRequired={false}
+                isRequired={true}
               >
                 <FormControlLabel>
                   <FormControlLabelText size="lg">Title</FormControlLabelText>
                 </FormControlLabel>
                 <Input className="my-1" size="lg">
-                  <InputField type="text" placeholder="Enter title" />
+                  <InputField
+                    type="text"
+                    placeholder="Enter title"
+                    value={title}
+                    onChangeText={setTitle}
+                  />
                 </Input>
                 <FormControlLabel className="mt-5">
                   <FormControlLabelText>Description</FormControlLabelText>
                 </FormControlLabel>
                 <Input className="my-1" size="lg">
-                  <InputField type="text" placeholder="Enter description" />
+                  <InputField
+                    type="text"
+                    placeholder="Enter description"
+                    value={description}
+                    onChangeText={setDescription}
+                  />
                 </Input>
                 <Button className="mt-7 mb-5" size="lg" onPress={pickImage}>
                   <ButtonText>
