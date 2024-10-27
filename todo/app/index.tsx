@@ -1,7 +1,5 @@
 import React, { useEffect, useState } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-
-import * as ImagePicker from "expo-image-picker";
 import { Heading } from "@/components/ui/heading";
 import { Fab, FabLabel, FabIcon } from "@/components/ui/fab";
 import { Text } from "@/components/ui/text";
@@ -11,39 +9,45 @@ import {
   AddIcon,
   CheckCircleIcon,
   Icon,
+  MenuIcon,
+  EditIcon,
+  TrashIcon,
   RepeatIcon,
+  InfoIcon,
+  CloseCircleIcon,
 } from "@/components/ui/icon";
-import { Image } from "@/components/ui/image";
-import { HStack } from "@/components/ui/hstack";
 import {
   AlertDialog,
   AlertDialogBackdrop,
   AlertDialogContent,
   AlertDialogHeader,
-  AlertDialogCloseButton,
   AlertDialogFooter,
   AlertDialogBody,
 } from "@/components/ui/alert-dialog";
-import { Button, ButtonIcon, ButtonText } from "@/components/ui/button";
+import { HStack } from "@/components/ui/hstack";
+import { Card } from "@/components/ui/card";
+import { ScrollView } from "react-native";
 import {
   FormControl,
   FormControlLabel,
   FormControlLabelText,
 } from "@/components/ui/form-control";
 import { Input, InputField } from "@/components/ui/input";
-import { Card } from "@/components/ui/card";
-import { ScrollView, TouchableOpacity, View } from "react-native";
+import { ButtonText, ButtonIcon, Button } from "@/components/ui/button";
 import {
-  Avatar,
-  AvatarFallbackText,
-  AvatarImage,
-} from "@/components/ui/avatar";
-
-import { Swipeable } from "react-native-gesture-handler";
-import { Animated, StyleSheet } from "react-native";
+  Menu,
+  MenuItem,
+  MenuItemLabel,
+  MenuSeparator,
+} from "@/components/ui/menu";
+import * as ImagePicker from "expo-image-picker";
+import { useRouter } from "expo-router";
+import { Badge, BadgeIcon, BadgeText } from "@/components/ui/badge";
+import "react-native-get-random-values";
+import { v4 as uuidv4 } from "uuid";
 
 interface TodoItem {
-  id: number;
+  id: string;
   title: string;
   description: string;
   image: string | null;
@@ -51,20 +55,20 @@ interface TodoItem {
 }
 
 const ToDoApp = () => {
+  const router = useRouter();
   const [todos, setTodos] = useState<TodoItem[]>([]);
   const [title, setTitle] = useState<string>("");
   const [description, setDescription] = useState<string>("");
   const [image, setImage] = useState<string | null>(null);
-  const [editingId, setEditingId] = useState<number | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [hasTodos, setHasTodos] = useState<boolean>(false);
   const [showAddModal, setShowAddModal] = useState<boolean>(false);
-  const [counter, setCounter] = useState<number>(0);
-
   const handleClose = () => {
     setShowAddModal(false);
     setTitle("");
     setDescription("");
     setImage(null);
+    setEditingId(null);
   };
 
   // Load todos when the component mounts
@@ -75,7 +79,6 @@ const ToDoApp = () => {
   // Function to load todos from AsyncStorage
   const loadTodos = async () => {
     try {
-      // await AsyncStorage.clear();
       const savedTodos = await AsyncStorage.getItem("todos");
       if (savedTodos) {
         setTodos(JSON.parse(savedTodos));
@@ -86,29 +89,26 @@ const ToDoApp = () => {
     }
   };
 
-  // Function to save todos in AsyncStorage
-  const saveTodos = async (newTodos: TodoItem[]) => {
-    try {
-      await AsyncStorage.setItem("todos", JSON.stringify(newTodos));
-      setTodos(newTodos);
-    } catch (error) {
-      console.error(error);
-    }
+  const handleEdit = (todo: TodoItem) => {
+    setTitle(todo.title);
+    setDescription(todo.description);
+    setImage(todo.image);
+    setEditingId(todo.id);
+    setShowAddModal(true);
   };
 
-  // Function to add or update a todo
   const addOrUpdateTodo = () => {
-    if (!title.trim() && !description.trim()) {
-      alert("Please fill out both the title and description too add a todo.");
-      return;
-    } else if (!title.trim()) {
-      alert("Please fill out the title to add a todo.");
-      return;
-    } else if (!description.trim()) {
-      alert("Please fill out the description to add a todo.");
+    if (!title.trim() || !description.trim()) {
+      alert("Please fill out both the title and description.");
       return;
     }
 
+    if (!image) {
+      alert("Please upload an image for the task.");
+      return;
+    }
+
+    // If editing an existing task
     if (editingId !== null) {
       const updatedTodos = todos.map((todo) =>
         todo.id === editingId
@@ -123,8 +123,9 @@ const ToDoApp = () => {
       saveTodos(updatedTodos);
       setEditingId(null);
     } else {
+      // Creating a new task
       const newTodo: TodoItem = {
-        id: counter,
+        id: uuidv4(),
         title,
         description,
         image,
@@ -135,24 +136,28 @@ const ToDoApp = () => {
       if (!hasTodos) {
         setHasTodos(true);
       }
-      setCounter(counter + 1);
     }
 
-    // Clear form fields after adding/updating
+    // Reset modal fields and close modal
     setTitle("");
     setDescription("");
     setImage(null);
     setShowAddModal(false);
   };
 
-  // Function to delete a todo
-  const deleteTodo = (id: number) => {
-    const newTodos = todos.filter((todo) => todo.id !== id);
-    saveTodos(newTodos);
+  // Function to save todos in AsyncStorage
+  const saveTodos = async (newTodos: TodoItem[]) => {
+    try {
+      console.log("Saving todos:", newTodos);
+      await AsyncStorage.setItem("todos", JSON.stringify(newTodos));
+      setTodos(newTodos);
+    } catch (error) {
+      console.error("Error saving todos:", error);
+    }
   };
 
   // Function to mark a todo as completed
-  const markAsCompleted = (id: number) => {
+  const markAsCompleted = (id: string) => {
     const updatedTodos = todos.map((todo) =>
       todo.id === id
         ? {
@@ -164,12 +169,10 @@ const ToDoApp = () => {
     saveTodos(updatedTodos);
   };
 
-  // Function to handle editing
-  const handleEdit = (todo: TodoItem) => {
-    setTitle(todo.title);
-    setDescription(todo.description);
-    setImage(todo.image);
-    setEditingId(todo.id);
+  // Function to delete a todo
+  const deleteTodo = (id: string) => {
+    const newTodos = todos.filter((todo) => todo.id !== id);
+    saveTodos(newTodos);
   };
 
   // Function to pick an image from the library
@@ -185,107 +188,109 @@ const ToDoApp = () => {
     }
   };
 
-  const styles = StyleSheet.create({
-    actionText: {
-      color: "white",
-      fontSize: 16,
-      fontWeight: "bold",
-      padding: 20,
-    },
-    leftAction: {
-      backgroundColor: "green",
-      justifyContent: "center",
-      alignItems: "flex-start",
-      paddingLeft: 20,
-      flex: 1,
-    },
-    rightAction: {
-      backgroundColor: "red",
-      justifyContent: "center",
-      alignItems: "flex-end",
-      paddingRight: 20,
-      flex: 1,
-    },
-  });
-  
-  const renderLeftActions = (progress: any, dragX: any, todoID: number) => {
-    return (
-      <View style={styles.leftAction}>
-        <TouchableOpacity onPress={() => markAsCompleted(todoID)}>
-          <Text style={styles.actionText}>Complete</Text>
-        </TouchableOpacity>
-      </View>
-    );
-  };
-  
-  const renderRightActions = (progress: any, dragX: any, todoID: number) => {
-    return (
-      <View style={styles.rightAction}>
-        <TouchableOpacity onPress={() => deleteTodo(todoID)}>
-          <Text style={styles.actionText}>Delete</Text>
-        </TouchableOpacity>
-      </View>
-    );
-  };
-
   return (
     <>
       <VStack className="flex-1 bg-secondary-0 items-center pt-2" space="lg">
-        <HStack className="w-full p-5 bg-secondary-0 items-center" space="md">
-          <Heading text-typography-950 size={"3xl"}>
-            TickItOff
-          </Heading>
-          <Icon as={CheckCircleIcon} size="xl" />
-        </HStack>
         {hasTodos ? (
           <ScrollView
             style={{ width: "100%" }}
             contentContainerStyle={{ alignItems: "center" }}
           >
             {todos.map((todo) => (
-              <Swipeable
-                friction={2}
-                leftThreshold={30}
-                rightThreshold={30}
-                renderLeftActions={(progress, dragX) => renderLeftActions(progress, dragX, todo.id)}
-                renderRightActions={(progress, dragX) => renderRightActions(progress, dragX, todo.id)}
+              <Card
+                size="lg"
+                variant="outline"
+                className="m-3 w-full"
+                style={{ maxWidth: "90%" }}
                 key={todo.id}
               >
-                <Card
-                  size="lg"
-                  variant="outline"
-                  className="m-3 w-full"
-                  style={{ maxWidth: "90%" }}
+                <HStack
+                  space="md"
+                  className="justify-between w-full"
+                  style={{
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                  }}
                 >
-                  <HStack
-                    space="md"
-                    className="justify-between w-full"
-                    style={{
-                      alignItems: "center",
-                      justifyContent: "space-between",
+                  <VStack space="md">
+                    <Heading
+                      size="lg"
+                      className="mb-1"
+                      style={{ textAlign: "left" }}
+                    >
+                      {todo.title}
+                    </Heading>
+                    <Badge
+                      size="md"
+                      variant="solid"
+                      action={todo.completed ? "success" : "error"}
+                      style={{ alignSelf: "flex-start" }}
+                    >
+                      <BadgeText>
+                        {todo.completed ? "Completed" : "Incomplete"}
+                      </BadgeText>
+                      <BadgeIcon
+                        as={todo.completed ? CheckCircleIcon : CloseCircleIcon}
+                        className="ml-2"
+                      />
+                    </Badge>
+                  </VStack>
+                  <Menu
+                    placement="bottom right"
+                    offset={5}
+                    trigger={({ ...triggerProps }) => {
+                      return (
+                        <Button
+                          {...triggerProps}
+                          size="lg"
+                          className="p-2"
+                          variant="link"
+                        >
+                          <ButtonIcon size={"lg"} as={MenuIcon} />
+                        </Button>
+                      );
                     }}
                   >
-                    <VStack space="md" style={{ flex: 1 }}>
-                      <Heading
+                    <MenuItem
+                      key="View"
+                      onPress={() => router.replace(`/details?id=${todo.id}`)}
+                    >
+                      <Icon as={InfoIcon} size="lg" className="mr-2" />
+                      <MenuItemLabel size="lg">View Task</MenuItemLabel>
+                    </MenuItem>
+                    <MenuItem
+                      key="Complete"
+                      onPress={() => markAsCompleted(todo.id)}
+                    >
+                      <Icon
+                        as={todo.completed ? CloseCircleIcon : CheckCircleIcon}
                         size="lg"
-                        className="mb-1"
-                        style={{ textAlign: "left" }}
-                      >
-                        {todo.title}
-                      </Heading>
-                      <Text size="lg" style={{ textAlign: "left" }}>
-                        {todo.description}
-                      </Text>
-                    </VStack>
-                    {todo.image && (
-                      <Avatar size="xl">
-                        <AvatarFallbackText>{todo.id}</AvatarFallbackText>
-                        <AvatarImage source={{ uri: todo.image }} />
-                      </Avatar>
-                    )}
-                  </HStack>
-                </Card>
-              </Swipeable>
+                        className="mr-2"
+                      />
+                      <MenuItemLabel size="lg">
+                        {todo.completed
+                          ? "Mark as incomplete"
+                          : "Mark as complete"}
+                      </MenuItemLabel>
+                    </MenuItem>
+                    <MenuSeparator />
+                    <MenuItem key="Edit" onPress={() => handleEdit(todo)}>
+                      <Icon as={EditIcon} size="lg" className="mr-2" />
+                      <MenuItemLabel size="lg">Edit</MenuItemLabel>
+                    </MenuItem>
+                    <MenuItem key="Delete" onPress={() => deleteTodo(todo.id)}>
+                      <Icon
+                        as={TrashIcon}
+                        size="lg"
+                        className="mr-2 color-error-700"
+                      />
+                      <MenuItemLabel size="lg" className="color-error-700">
+                        Delete
+                      </MenuItemLabel>
+                    </MenuItem>
+                  </Menu>
+                </HStack>
+              </Card>
             ))}
           </ScrollView>
         ) : (
@@ -304,6 +309,7 @@ const ToDoApp = () => {
           isHovered={false}
           isDisabled={false}
           isPressed={false}
+          className="bg-tertiary-400"
           onPress={() => setShowAddModal(true)}
         >
           <FabIcon as={AddIcon} />
@@ -311,12 +317,12 @@ const ToDoApp = () => {
         </Fab>
       </VStack>
 
-      <AlertDialog isOpen={showAddModal} onClose={handleClose} size="md">
+      <AlertDialog isOpen={showAddModal} onClose={() => {}} size="md">
         <AlertDialogBackdrop />
         <AlertDialogContent>
           <AlertDialogHeader>
             <Heading className="text-typography-950 font-semibold" size="lg">
-              Create a new ToDo
+              {editingId ? "Edit ToDo" : "Create a new ToDo"}
             </Heading>
           </AlertDialogHeader>
           <AlertDialogBody className="mt-3 mb-4">
@@ -349,7 +355,10 @@ const ToDoApp = () => {
                     onChangeText={setDescription}
                   />
                 </Input>
-                <Button className="mt-7 mb-5" size="lg" onPress={pickImage}>
+                <FormControlLabel className="mt-5">
+                  <FormControlLabelText>Image</FormControlLabelText>
+                </FormControlLabel>
+                <Button className="mb-5" size="lg" onPress={pickImage}>
                   <ButtonText>
                     {image ? "Change Image" : "Upload Image"}
                   </ButtonText>
@@ -367,8 +376,12 @@ const ToDoApp = () => {
             >
               <ButtonText>Cancel</ButtonText>
             </Button>
-            <Button size="lg" onPress={addOrUpdateTodo}>
-              <ButtonText>Create</ButtonText>
+            <Button
+              size="lg"
+              onPress={addOrUpdateTodo}
+              className="bg-tertiary-400"
+            >
+              <ButtonText>{editingId ? "Update" : "Create"}</ButtonText>
             </Button>
           </AlertDialogFooter>
         </AlertDialogContent>

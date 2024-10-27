@@ -1,17 +1,15 @@
 import "@/global.css";
-import { Slot, Stack, Tabs } from "expo-router";
+import { Slot } from "expo-router";
 import { GluestackUIProvider } from "@/components/ui/gluestack-ui-provider";
 import { SafeAreaView } from "@/components/ui/safe-area-view";
-import "react-native-gesture-handler";
-import { GestureHandlerRootView } from "react-native-gesture-handler";
+import Header from "./header";
 
 export default function RootLayout() {
   return (
     <GluestackUIProvider mode="light">
       <SafeAreaView style={{ flex: 1 }}>
-        <GestureHandlerRootView style={{ flex: 1 }}>
+          <Header />
           <Slot />
-        </GestureHandlerRootView>
       </SafeAreaView>
     </GluestackUIProvider>
   );
