@@ -12,6 +12,7 @@ module.exports = function(api) {
         "@": "./",
         "tailwind.config": "./tailwind.config.js"
       }
-    }]]
+    }]],
+    
   };
 };

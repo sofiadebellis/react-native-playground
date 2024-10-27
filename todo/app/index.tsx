@@ -32,7 +32,16 @@ import {
 } from "@/components/ui/form-control";
 import { Input, InputField } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
-import { ScrollView } from "react-native";
+import { ScrollView, TouchableOpacity, View } from "react-native";
+import {
+  Avatar,
+  AvatarFallbackText,
+  AvatarImage,
+} from "@/components/ui/avatar";
+
+import { Swipeable } from "react-native-gesture-handler";
+import { Animated, StyleSheet } from "react-native";
+
 interface TodoItem {
   id: number;
   title: string;
@@ -40,6 +49,7 @@ interface TodoItem {
   image: string | null;
   completed: boolean;
 }
+
 const ToDoApp = () => {
   const [todos, setTodos] = useState<TodoItem[]>([]);
   const [title, setTitle] = useState<string>("");
@@ -65,7 +75,7 @@ const ToDoApp = () => {
   // Function to load todos from AsyncStorage
   const loadTodos = async () => {
     try {
-      await AsyncStorage.clear();
+      // await AsyncStorage.clear();
       const savedTodos = await AsyncStorage.getItem("todos");
       if (savedTodos) {
         setTodos(JSON.parse(savedTodos));
@@ -175,8 +185,48 @@ const ToDoApp = () => {
     }
   };
 
-  // Rendering each todo item
-  const renderTodoItem = ({ item }: { item: TodoItem }) => console.log(item);
+  const styles = StyleSheet.create({
+    actionText: {
+      color: "white",
+      fontSize: 16,
+      fontWeight: "bold",
+      padding: 20,
+    },
+    leftAction: {
+      backgroundColor: "green",
+      justifyContent: "center",
+      alignItems: "flex-start",
+      paddingLeft: 20,
+      flex: 1,
+    },
+    rightAction: {
+      backgroundColor: "red",
+      justifyContent: "center",
+      alignItems: "flex-end",
+      paddingRight: 20,
+      flex: 1,
+    },
+  });
+  
+  const renderLeftActions = (progress: any, dragX: any, todoID: number) => {
+    return (
+      <View style={styles.leftAction}>
+        <TouchableOpacity onPress={() => markAsCompleted(todoID)}>
+          <Text style={styles.actionText}>Complete</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  };
+  
+  const renderRightActions = (progress: any, dragX: any, todoID: number) => {
+    return (
+      <View style={styles.rightAction}>
+        <TouchableOpacity onPress={() => deleteTodo(todoID)}>
+          <Text style={styles.actionText}>Delete</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  };
 
   return (
     <>
@@ -193,49 +243,49 @@ const ToDoApp = () => {
             contentContainerStyle={{ alignItems: "center" }}
           >
             {todos.map((todo) => (
-              <Card
+              <Swipeable
+                friction={2}
+                leftThreshold={30}
+                rightThreshold={30}
+                renderLeftActions={(progress, dragX) => renderLeftActions(progress, dragX, todo.id)}
+                renderRightActions={(progress, dragX) => renderRightActions(progress, dragX, todo.id)}
                 key={todo.id}
-                size="lg"
-                variant="outline"
-                className="m-3 w-full"
-                style={{ maxWidth: "90%", width: "100%" }}
               >
-                <HStack
-                  space="md"
-                  className="justify-between w-full"
-                  style={{
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                  }}
+                <Card
+                  size="lg"
+                  variant="outline"
+                  className="m-3 w-full"
+                  style={{ maxWidth: "90%" }}
                 >
-                  {/* Left-aligned content: Title and Description */}
-                  <VStack space="md" style={{ flex: 1 }}>
-                    <Heading
-                      size="lg"
-                      className="mb-1"
-                      style={{ textAlign: "left" }}
-                    >
-                      {todo.title}
-                    </Heading>
-                    <Text size="lg" style={{ textAlign: "left" }}>
-                      {todo.description}
-                    </Text>
-                  </VStack>
-
-                  {/* Right-aligned circular image */}
-                  {todo.image && (
-                    <Image
-                      source={{ uri: todo.image }}
-                      alt="Todo Image"
-                      style={{
-                        width: 100,
-                        height: 100,
-                        borderRadius: 50, // Make the image circular
-                      }}
-                    />
-                  )}
-                </HStack>
-              </Card>
+                  <HStack
+                    space="md"
+                    className="justify-between w-full"
+                    style={{
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                    }}
+                  >
+                    <VStack space="md" style={{ flex: 1 }}>
+                      <Heading
+                        size="lg"
+                        className="mb-1"
+                        style={{ textAlign: "left" }}
+                      >
+                        {todo.title}
+                      </Heading>
+                      <Text size="lg" style={{ textAlign: "left" }}>
+                        {todo.description}
+                      </Text>
+                    </VStack>
+                    {todo.image && (
+                      <Avatar size="xl">
+                        <AvatarFallbackText>{todo.id}</AvatarFallbackText>
+                        <AvatarImage source={{ uri: todo.image }} />
+                      </Avatar>
+                    )}
+                  </HStack>
+                </Card>
+              </Swipeable>
             ))}
           </ScrollView>
         ) : (
