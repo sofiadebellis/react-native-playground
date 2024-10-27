@@ -29,7 +29,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { HStack } from "@/components/ui/hstack";
 import { Card } from "@/components/ui/card";
-import { ScrollView } from "react-native";
+import { Pressable, ScrollView } from "react-native";
 import {
   FormControl,
   FormControlLabel,
@@ -73,7 +73,7 @@ interface TodoItem {
   description: string;
   image: string | null;
   completed: boolean;
-  priority: "Low" | "Medium" | "High" | null; 
+  priority: "Low" | "Medium" | "High" | null;
 }
 
 const ToDoApp = () => {
@@ -96,7 +96,7 @@ const ToDoApp = () => {
     setTitle("");
     setDescription("");
     setImage(null);
-    setPriority(null); 
+    setPriority(null);
     setEditingId(null);
   };
 
@@ -277,138 +277,147 @@ const ToDoApp = () => {
           >
             {filteredTodos.length > 0 ? (
               filteredTodos.map((todo) => (
-                <Card
-                  size="lg"
-                  variant="outline"
-                  className="m-3 w-full"
-                  style={{ maxWidth: "90%" }}
+                <Pressable
                   key={todo.id}
+                  onPress={() => router.push(`/details?id=${todo.id}`)}
                 >
-                  <HStack
-                    space="md"
-                    className="justify-between w-full"
-                    style={{
-                      alignItems: "center",
-                      justifyContent: "space-between",
-                    }}
+                  <Card
+                    size="lg"
+                    variant="outline"
+                    className="m-3 w-full"
+                    style={{ maxWidth: "90%" }}
+                    key={todo.id}
                   >
-                    <VStack space="md">
-                      <Heading
-                        size="lg"
-                        className="mb-1"
-                        style={{ textAlign: "left" }}
-                      >
-                        {todo.title}
-                      </Heading>
-                      <HStack
-                        space="md"
-                        style={{
-                          alignItems: "center",
-                        }}
-                      >
-                        <Badge
-                          size="md"
-                          variant="solid"
-                          action={todo.completed ? "success" : "error"}
-                        >
-                          <BadgeText>
-                            {todo.completed ? "Completed" : "Incomplete"}
-                          </BadgeText>
-                          <BadgeIcon
-                            as={
-                              todo.completed ? CheckCircleIcon : CloseCircleIcon
-                            }
-                            className="ml-2"
-                          />
-                        </Badge>
-                        <Badge
-                          size="md"
-                          variant="solid"
-                          action={
-                            todo.priority === "High"
-                              ? "error"
-                              : todo.priority === "Medium"
-                              ? "warning"
-                              : "info"
-                          }
-                          style={{ alignSelf: "flex-start", marginTop: 5 }}
-                        >
-                          <BadgeText>{todo.priority} Priority</BadgeText>
-                          <BadgeIcon
-                            as={
-                              todo.priority === "High"
-                                ? CircleAlert
-                                : todo.priority === "Medium"
-                                ? CircleArrowUp
-                                : CircleArrowDown
-                            }
-                            className="ml-2"
-                          />
-                        </Badge>
-                      </HStack>
-                    </VStack>
-                    <Menu
-                      placement="bottom right"
-                      offset={5}
-                      trigger={({ ...triggerProps }) => {
-                        return (
-                          <Button
-                            {...triggerProps}
-                            size="lg"
-                            className="p-2"
-                            variant="link"
-                            textValue="Menu"
-                          >
-                            <ButtonIcon size={"lg"} as={MenuIcon} />
-                          </Button>
-                        );
+                    <HStack
+                      space="md"
+                      className="justify-between w-full"
+                      style={{
+                        alignItems: "center",
+                        justifyContent: "space-between",
                       }}
                     >
-                      <MenuItem
-                        key="View"
-                        onPress={() => router.replace(`/details?id=${todo.id}`)}
+                      <VStack space="md">
+                        <Heading
+                          size="lg"
+                          className="mb-1"
+                          style={{ textAlign: "left" }}
+                        >
+                          {todo.title}
+                        </Heading>
+                        <HStack
+                          space="md"
+                          style={{
+                            alignItems: "center",
+                          }}
+                        >
+                          <Badge
+                            size="md"
+                            variant="solid"
+                            action={todo.completed ? "success" : "error"}
+                          >
+                            <BadgeText>
+                              {todo.completed ? "Completed" : "Incomplete"}
+                            </BadgeText>
+                            <BadgeIcon
+                              as={
+                                todo.completed
+                                  ? CheckCircleIcon
+                                  : CloseCircleIcon
+                              }
+                              className="ml-2"
+                            />
+                          </Badge>
+                          <Badge
+                            size="md"
+                            variant="solid"
+                            action={
+                              todo.priority === "High"
+                                ? "error"
+                                : todo.priority === "Medium"
+                                ? "warning"
+                                : "info"
+                            }
+                            style={{ alignSelf: "flex-start", marginTop: 5 }}
+                          >
+                            <BadgeText>{todo.priority} Priority</BadgeText>
+                            <BadgeIcon
+                              as={
+                                todo.priority === "High"
+                                  ? CircleAlert
+                                  : todo.priority === "Medium"
+                                  ? CircleArrowUp
+                                  : CircleArrowDown
+                              }
+                              className="ml-2"
+                            />
+                          </Badge>
+                        </HStack>
+                      </VStack>
+                      <Menu
+                        placement="bottom right"
+                        offset={5}
+                        trigger={({ ...triggerProps }) => {
+                          return (
+                            <Button
+                              {...triggerProps}
+                              size="lg"
+                              className="p-2"
+                              variant="link"
+                              textValue="Menu"
+                            >
+                              <ButtonIcon size={"lg"} as={MenuIcon} />
+                            </Button>
+                          );
+                        }}
                       >
-                        <Icon as={InfoIcon} size="lg" className="mr-2" />
-                        <MenuItemLabel size="lg">View Task</MenuItemLabel>
-                      </MenuItem>
-                      <MenuItem
-                        key="Complete"
-                        onPress={() => markAsCompleted(todo.id)}
-                      >
-                        <Icon
-                          as={
-                            todo.completed ? CloseCircleIcon : CheckCircleIcon
+                        <MenuItem
+                          key="View"
+                          onPress={() =>
+                            router.replace(`/details?id=${todo.id}`)
                           }
-                          size="lg"
-                          className="mr-2"
-                        />
-                        <MenuItemLabel size="lg">
-                          {todo.completed
-                            ? "Mark as incomplete"
-                            : "Mark as complete"}
-                        </MenuItemLabel>
-                      </MenuItem>
-                      <MenuSeparator />
-                      <MenuItem key="Edit" onPress={() => handleEdit(todo)}>
-                        <Icon as={EditIcon} size="lg" className="mr-2" />
-                        <MenuItemLabel size="lg">Edit</MenuItemLabel>
-                      </MenuItem>
-                      <MenuItem
-                        key="Delete"
-                        onPress={() => deleteTodo(todo.id)}
-                      >
-                        <Icon
-                          as={TrashIcon}
-                          size="lg"
-                          className="mr-2 color-error-700"
-                        />
-                        <MenuItemLabel size="lg" className="color-error-700">
-                          Delete
-                        </MenuItemLabel>
-                      </MenuItem>
-                    </Menu>
-                  </HStack>
-                </Card>
+                        >
+                          <Icon as={InfoIcon} size="lg" className="mr-2" />
+                          <MenuItemLabel size="lg">View Task</MenuItemLabel>
+                        </MenuItem>
+                        <MenuItem
+                          key="Complete"
+                          onPress={() => markAsCompleted(todo.id)}
+                        >
+                          <Icon
+                            as={
+                              todo.completed ? CloseCircleIcon : CheckCircleIcon
+                            }
+                            size="lg"
+                            className="mr-2"
+                          />
+                          <MenuItemLabel size="lg">
+                            {todo.completed
+                              ? "Mark as incomplete"
+                              : "Mark as complete"}
+                          </MenuItemLabel>
+                        </MenuItem>
+                        <MenuSeparator />
+                        <MenuItem key="Edit" onPress={() => handleEdit(todo)}>
+                          <Icon as={EditIcon} size="lg" className="mr-2" />
+                          <MenuItemLabel size="lg">Edit</MenuItemLabel>
+                        </MenuItem>
+                        <MenuItem
+                          key="Delete"
+                          onPress={() => deleteTodo(todo.id)}
+                        >
+                          <Icon
+                            as={TrashIcon}
+                            size="lg"
+                            className="mr-2 color-error-700"
+                          />
+                          <MenuItemLabel size="lg" className="color-error-700">
+                            Delete
+                          </MenuItemLabel>
+                        </MenuItem>
+                      </Menu>
+                    </HStack>
+                  </Card>
+                </Pressable>
               ))
             ) : (
               <Text className="primary-0" size={"lg"}>
