@@ -18,6 +18,8 @@ import {
   SearchIcon,
   ChevronDownIcon,
   ChevronUpIcon,
+  EyeIcon,
+  EyeOffIcon,
 } from "@/components/ui/icon";
 import {
   AlertDialog,
@@ -90,6 +92,7 @@ const ToDoApp = () => {
   const [showAddModal, setShowAddModal] = useState<boolean>(false);
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [isHighToLow, setIsHighToLow] = useState<boolean>(true);
+  const [showCompleted, setShowCompleted] = useState<boolean>(false);
 
   const handleClose = () => {
     setShowAddModal(false);
@@ -120,7 +123,7 @@ const ToDoApp = () => {
     setTitle(todo.title);
     setDescription(todo.description);
     setImage(todo.image);
-    setPriority(todo.priority); 
+    setPriority(todo.priority);
     setEditingId(todo.id);
     setShowAddModal(true);
   };
@@ -149,7 +152,7 @@ const ToDoApp = () => {
               title,
               description,
               image,
-              priority, 
+              priority,
             }
           : todo
       );
@@ -162,7 +165,7 @@ const ToDoApp = () => {
         description,
         image,
         completed: false,
-        priority, 
+        priority,
       };
       const newTodos = [...todos, newTodo];
       saveTodos(newTodos);
@@ -225,8 +228,9 @@ const ToDoApp = () => {
 
   const filteredTodos = sortedTodos.filter(
     (todo) =>
-      todo.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      todo.description.toLowerCase().includes(searchQuery.toLowerCase())
+      (showCompleted || !todo.completed) &&
+      (todo.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        todo.description.toLowerCase().includes(searchQuery.toLowerCase()))
   );
 
   const toggleSortOrder = () => {
@@ -249,12 +253,22 @@ const ToDoApp = () => {
             />
           </Input>
         </Box>
+
         <Box style={{ width: "90%", marginBottom: 10 }}>
           <Button onPress={toggleSortOrder} size="lg">
             <ButtonText>
               {isHighToLow ? "Sort: High to Low" : "Sort: Low to High"}
             </ButtonText>
             <ButtonIcon as={isHighToLow ? ChevronDownIcon : ChevronUpIcon} />
+          </Button>
+        </Box>
+
+        <Box style={{ width: "90%", marginBottom: 10 }}>
+          <Button onPress={() => setShowCompleted((prev) => !prev)} size="lg">
+            <ButtonText>
+              {showCompleted ? "Hide Completed" : "Show Completed"}
+            </ButtonText>
+            <ButtonIcon as={showCompleted ? EyeOffIcon : EyeIcon} />
           </Button>
         </Box>
 
@@ -288,7 +302,12 @@ const ToDoApp = () => {
                         <Heading
                           size="lg"
                           className="mb-1"
-                          style={{ textAlign: "left" }}
+                          style={{
+                            textAlign: "left",
+                            textDecorationLine: todo.completed
+                              ? "line-through"
+                              : "none",
+                          }}
                         >
                           {todo.title}
                         </Heading>
@@ -443,122 +462,6 @@ const ToDoApp = () => {
           <FabLabel>Add ToDo</FabLabel>
         </Fab>
       </VStack>
-
-      <AlertDialog isOpen={showAddModal} onClose={() => {}} size="md">
-        <AlertDialogBackdrop />
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <Heading className="text-typography-950 font-semibold" size="lg">
-              {editingId ? "Edit ToDo" : "Create a new ToDo"}
-            </Heading>
-          </AlertDialogHeader>
-          <AlertDialogBody className="mt-3 mb-4">
-            <VStack space="lg">
-              <FormControl
-                size="lg"
-                isDisabled={false}
-                isReadOnly={false}
-                isRequired={true}
-              >
-                <FormControlLabel>
-                  <FormControlLabelText size="lg">Title</FormControlLabelText>
-                </FormControlLabel>
-                <Input className="my-1" size="lg">
-                  <InputField
-                    type="text"
-                    placeholder="Enter title"
-                    value={title}
-                    onChangeText={setTitle}
-                  />
-                </Input>
-                <FormControlLabel className="mt-5">
-                  <FormControlLabelText>Description</FormControlLabelText>
-                </FormControlLabel>
-                <Input className="my-1" size="lg">
-                  <InputField
-                    type="text"
-                    placeholder="Enter description"
-                    value={description}
-                    onChangeText={setDescription}
-                  />
-                </Input>
-
-                <FormControlLabel className="mt-5">
-                  <FormControlLabelText>Priority</FormControlLabelText>
-                </FormControlLabel>
-                <Select
-                  onValueChange={(value) =>
-                    setPriority(value as "Low" | "Medium" | "High")
-                  }
-                >
-                  <SelectTrigger
-                    variant="outline"
-                    size="lg"
-                    style={{
-                      flexDirection: "row",
-                      justifyContent: "space-between",
-                    }}
-                  >
-                    <SelectInput
-                      placeholder={priority ? priority : "Select priority"}
-                    />
-                    <SelectIcon className="mr-3" as={ChevronDownIcon} />
-                  </SelectTrigger>
-                  <SelectPortal>
-                    <SelectBackdrop />
-                    <SelectContent>
-                      <SelectDragIndicatorWrapper>
-                        <SelectDragIndicator />
-                      </SelectDragIndicatorWrapper>
-                      <SelectItem
-                        label="Low"
-                        value="Low"
-                        style={{ paddingVertical: 10 }}
-                      />
-                      <SelectItem
-                        label="Medium"
-                        value="Medium"
-                        style={{ paddingVertical: 10 }}
-                      />
-                      <SelectItem
-                        label="High"
-                        value="High"
-                        style={{ paddingVertical: 10 }}
-                      />
-                    </SelectContent>
-                  </SelectPortal>
-                </Select>
-                <FormControlLabel className="mt-5">
-                  <FormControlLabelText>Image</FormControlLabelText>
-                </FormControlLabel>
-                <Button className="mb-5" size="lg" onPress={pickImage}>
-                  <ButtonText>
-                    {image ? "Change Image" : "Upload Image"}
-                  </ButtonText>
-                  <ButtonIcon as={image ? RepeatIcon : AddIcon} />
-                </Button>
-              </FormControl>
-            </VStack>
-          </AlertDialogBody>
-          <AlertDialogFooter>
-            <Button
-              variant="outline"
-              action="secondary"
-              onPress={handleClose}
-              size="lg"
-            >
-              <ButtonText>Cancel</ButtonText>
-            </Button>
-            <Button
-              size="lg"
-              onPress={addOrUpdateTodo}
-              className="bg-tertiary-400"
-            >
-              <ButtonText>{editingId ? "Update" : "Create"}</ButtonText>
-            </Button>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </>
   );
 };
