@@ -12,6 +12,7 @@ import {
   CloseCircleIcon,
   AddIcon,
   RepeatIcon,
+  ChevronDownIcon,
 } from "@/components/ui/icon";
 import { Heading } from "@/components/ui/heading";
 import {
@@ -35,6 +36,25 @@ import {
   FormControlLabel,
   FormControlLabelText,
 } from "@/components/ui/form-control";
+import {
+  Select,
+  SelectBackdrop,
+  SelectContent,
+  SelectDragIndicator,
+  SelectDragIndicatorWrapper,
+  SelectIcon,
+  SelectInput,
+  SelectItem,
+  SelectPortal,
+  SelectTrigger,
+} from "@/components/ui/select";
+
+import {
+  CircleAlert,
+  CircleArrowDown,
+  CircleArrowUp,
+} from "lucide-react-native";
+import { HStack } from "@/components/ui/hstack";
 
 interface TodoItem {
   id: string;
@@ -42,6 +62,7 @@ interface TodoItem {
   description: string;
   image: string | null;
   completed: boolean;
+  priority: "Low" | "Medium" | "High" | null;
 }
 
 const TaskDetails = () => {
@@ -52,6 +73,9 @@ const TaskDetails = () => {
   const [title, setTitle] = useState<string>("");
   const [description, setDescription] = useState<string>("");
   const [image, setImage] = useState<string | null>(null);
+  const [priority, setPriority] = useState<"Low" | "Medium" | "High" | null>(
+    null
+  );
   const [showEditModal, setShowEditModal] = useState<boolean>(false);
 
   useEffect(() => {
@@ -65,7 +89,13 @@ const TaskDetails = () => {
         const todosArray: TodoItem[] = JSON.parse(savedTodos);
 
         const foundTask = todosArray.find((todo) => todo.id === id);
-        setTask(foundTask || null);
+        if (foundTask) {
+          setTask(foundTask);
+          setTitle(foundTask.title);
+          setDescription(foundTask.description);
+          setImage(foundTask.image);
+          setPriority(foundTask.priority);
+        }
       }
     } catch (error) {
       console.error(error);
@@ -114,18 +144,14 @@ const TaskDetails = () => {
     }
   };
 
-  // Function to edit the task
-  const editTask = () => {
-    if (!task) return;
-    setTitle(task.title);
-    setDescription(task.description);
-    setImage(task.image);
-    setShowEditModal(true);
-  };
-
   const addOrUpdateTodo = async () => {
     if (!title.trim() || !description.trim()) {
       alert("Please fill out both the title and description.");
+      return;
+    }
+
+    if (!priority) {
+      alert("Please select a priority for the task.");
       return;
     }
 
@@ -140,11 +166,13 @@ const TaskDetails = () => {
         const todosArray: TodoItem[] = JSON.parse(savedTodos);
 
         const updatedTodos = todosArray.map((todo) =>
-          todo.id === task?.id ? { ...todo, title, description, image } : todo
+          todo.id === task?.id
+            ? { ...todo, title, description, image, priority }
+            : todo
         );
 
         await AsyncStorage.setItem("todos", JSON.stringify(updatedTodos));
-        setTask({ ...task!, title, description, image });
+        setTask({ ...task!, title, description, image, priority });
         setShowEditModal(false);
       }
     } catch (error) {
@@ -152,7 +180,6 @@ const TaskDetails = () => {
     }
   };
 
-  // Function to pick an image from the library
   const pickImage = async () => {
     let result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
@@ -220,17 +247,44 @@ const TaskDetails = () => {
         <Heading className="text-typography-950" size={"xl"}>
           {task.title}
         </Heading>
-        <Badge
-          size="md"
-          variant="solid"
-          action={task.completed ? "success" : "error"}
-        >
-          <BadgeText>{task.completed ? "Completed" : "Incomplete"}</BadgeText>
-          <BadgeIcon
-            as={task.completed ? CheckCircleIcon : CloseCircleIcon}
-            className="ml-2"
-          />
-        </Badge>
+        <HStack space="md">
+          <Badge
+            size="lg"
+            variant="solid"
+            action={task.completed ? "success" : "error"}
+          >
+            <BadgeText>{task.completed ? "Completed" : "Incomplete"}</BadgeText>
+            <BadgeIcon
+              as={task.completed ? CheckCircleIcon : CloseCircleIcon}
+              className="ml-2"
+            />
+          </Badge>
+
+          <Badge
+            size="lg"
+            variant="solid"
+            action={
+              task.priority === "High"
+                ? "error"
+                : task.priority === "Medium"
+                ? "warning"
+                : "info"
+            }
+          >
+            <BadgeText>{task.priority} Priority</BadgeText>
+            <BadgeIcon
+              as={
+                task.priority === "High"
+                  ? CircleAlert
+                  : task.priority === "Medium"
+                  ? CircleArrowUp
+                  : CircleArrowDown
+              }
+              className="ml-2"
+            />
+          </Badge>
+        </HStack>
+
         <Text className="text-typography-950" size={"lg"}>
           {task.description}
         </Text>
@@ -249,7 +303,7 @@ const TaskDetails = () => {
         <Button
           size="xl"
           style={{ width: "90%", alignSelf: "center", marginTop: 10 }}
-          onPress={editTask}
+          onPress={() => setShowEditModal(true)}
         >
           <ButtonText>Edit Task</ButtonText>
         </Button>
@@ -263,11 +317,7 @@ const TaskDetails = () => {
         </Button>
       </VStack>
 
-      <AlertDialog
-        isOpen={showEditModal}
-        onClose={() => {}}
-        size="md"
-      >
+      <AlertDialog isOpen={showEditModal} onClose={() => {}} size="md">
         <AlertDialogBackdrop />
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -300,6 +350,43 @@ const TaskDetails = () => {
                     onChangeText={setDescription}
                   />
                 </Input>
+
+                <FormControlLabel className="mt-5">
+                  <FormControlLabelText>Priority</FormControlLabelText>
+                </FormControlLabel>
+                <Select
+                  onValueChange={(value) =>
+                    setPriority(value as "Low" | "Medium" | "High")
+                  }
+                >
+                  <SelectTrigger
+                    variant="outline"
+                    size="lg"
+                    style={{
+                      flexDirection: "row",
+                      justifyContent: "space-between",
+                    }}
+                  >
+                    <SelectInput
+                      placeholder={
+                        task.priority ? task.priority : "Select priority"
+                      }
+                    />
+                    <SelectIcon className="mr-3" as={ChevronDownIcon} />
+                  </SelectTrigger>
+                  <SelectPortal>
+                    <SelectBackdrop />
+                    <SelectContent>
+                      <SelectDragIndicatorWrapper>
+                        <SelectDragIndicator />
+                      </SelectDragIndicatorWrapper>
+                      <SelectItem label="Low" value="Low" />
+                      <SelectItem label="Medium" value="Medium" />
+                      <SelectItem label="High" value="High" />
+                    </SelectContent>
+                  </SelectPortal>
+                </Select>
+
                 <FormControlLabel className="mt-5">
                   <FormControlLabelText>Image</FormControlLabelText>
                 </FormControlLabel>
