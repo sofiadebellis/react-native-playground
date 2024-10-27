@@ -375,12 +375,14 @@ const ToDoApp = () => {
                           onPress={() =>
                             router.replace(`/details?id=${todo.id}`)
                           }
+                          textValue="View Task"
                         >
                           <Icon as={InfoIcon} size="lg" className="mr-2" />
-                          <MenuItemLabel size="lg">View Task</MenuItemLabel>
+                          <MenuItemLabel size="lg">View task</MenuItemLabel>
                         </MenuItem>
                         <MenuItem
                           key="Complete"
+                          textValue="Complete Task"
                           onPress={() => markAsCompleted(todo.id)}
                         >
                           <Icon
@@ -396,12 +398,17 @@ const ToDoApp = () => {
                               : "Mark as complete"}
                           </MenuItemLabel>
                         </MenuItem>
-                        <MenuSeparator />
-                        <MenuItem key="Edit" onPress={() => handleEdit(todo)}>
-                          <Icon as={EditIcon} size="lg" className="mr-2" />
-                          <MenuItemLabel size="lg">Edit</MenuItemLabel>
-                        </MenuItem>
                         <MenuItem
+                          key="Edit"
+                          onPress={() => handleEdit(todo)}
+                          textValue="Edit Task"
+                        >
+                          <Icon as={EditIcon} size="lg" className="mr-2" />
+                          <MenuItemLabel size="lg">Edit task</MenuItemLabel>
+                        </MenuItem>
+                        <MenuSeparator />
+                        <MenuItem
+                          textValue="Delete Task"
                           key="Delete"
                           onPress={() => deleteTodo(todo.id)}
                         >
