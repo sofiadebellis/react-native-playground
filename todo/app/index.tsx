@@ -100,12 +100,10 @@ const ToDoApp = () => {
     setEditingId(null);
   };
 
-  // Load todos when the component mounts
   useEffect(() => {
     loadTodos();
   }, []);
 
-  // Function to load todos from AsyncStorage
   const loadTodos = async () => {
     try {
       const savedTodos = await AsyncStorage.getItem("todos");
@@ -122,7 +120,7 @@ const ToDoApp = () => {
     setTitle(todo.title);
     setDescription(todo.description);
     setImage(todo.image);
-    setPriority(todo.priority); // Set priority when editing
+    setPriority(todo.priority); 
     setEditingId(todo.id);
     setShowAddModal(true);
   };
@@ -143,7 +141,6 @@ const ToDoApp = () => {
       return;
     }
 
-    // If editing an existing task
     if (editingId !== null) {
       const updatedTodos = todos.map((todo) =>
         todo.id === editingId
@@ -152,21 +149,20 @@ const ToDoApp = () => {
               title,
               description,
               image,
-              priority, // Update priority
+              priority, 
             }
           : todo
       );
       saveTodos(updatedTodos);
       setEditingId(null);
     } else {
-      // Creating a new task
       const newTodo: TodoItem = {
         id: uuidv4(),
         title,
         description,
         image,
         completed: false,
-        priority, // Add priority to the new task
+        priority, 
       };
       const newTodos = [...todos, newTodo];
       saveTodos(newTodos);
@@ -175,7 +171,6 @@ const ToDoApp = () => {
       }
     }
 
-    // Reset modal fields and close modal
     setTitle("");
     setDescription("");
     setImage(null);
@@ -183,7 +178,6 @@ const ToDoApp = () => {
     setShowAddModal(false);
   };
 
-  // Function to save todos in AsyncStorage
   const saveTodos = async (newTodos: TodoItem[]) => {
     try {
       await AsyncStorage.setItem("todos", JSON.stringify(newTodos));
@@ -193,7 +187,6 @@ const ToDoApp = () => {
     }
   };
 
-  // Function to mark a todo as completed
   const markAsCompleted = (id: string) => {
     const updatedTodos = todos.map((todo) =>
       todo.id === id
@@ -206,13 +199,11 @@ const ToDoApp = () => {
     saveTodos(updatedTodos);
   };
 
-  // Function to delete a todo
   const deleteTodo = (id: string) => {
     const newTodos = todos.filter((todo) => todo.id !== id);
     saveTodos(newTodos);
   };
 
-  // Function to pick an image from the library
   const pickImage = async () => {
     let result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
@@ -225,7 +216,6 @@ const ToDoApp = () => {
     }
   };
 
-  // Sort todos based on priority and sorting state
   const sortedTodos = [...todos].sort((a, b) => {
     const priorityOrder = { High: 3, Medium: 2, Low: 1 };
     const aPriority = a.priority ? priorityOrder[a.priority] : 0;
@@ -233,14 +223,12 @@ const ToDoApp = () => {
     return isHighToLow ? bPriority - aPriority : aPriority - bPriority;
   });
 
-  // Filter todos based on the search query
   const filteredTodos = sortedTodos.filter(
     (todo) =>
       todo.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       todo.description.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  // Toggle sorting order
   const toggleSortOrder = () => {
     setIsHighToLow((prev) => !prev);
   };
