@@ -284,7 +284,6 @@ const ToDoApp = () => {
             style={{ width: "100%" }}
             contentContainerStyle={{ alignItems: "center" }}
           >
-            {/* Render incomplete tasks */}
             {incompleteTodos.length > 0 ? (
               incompleteTodos.map((todo) => (
                 <Pressable
@@ -438,7 +437,7 @@ const ToDoApp = () => {
                 </Pressable>
               ))
             ) : (
-              <Text className="primary-0" size={"lg"}>
+              <Text className="primary-0 mt-10" size={"lg"}>
                 Your all up to date!
               </Text>
             )}
@@ -606,8 +605,8 @@ const ToDoApp = () => {
                     </Pressable>
                   ))
                 ) : (
-                  <Text className="primary-0" size={"lg"}>
-                    Your all up to date!
+                  <Text className="primary-0 mt-10" size={"lg"}>
+                    No tasks completed yet!
                   </Text>
                 )}
               </>
