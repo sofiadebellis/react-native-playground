@@ -615,7 +615,7 @@ const ToDoApp = () => {
         ) : (
           <Box
             className="w-full h-full p-1 items-center"
-            style={{ justifyContent: "flex-start", paddingTop: "70%" }}
+            style={{ justifyContent: "flex-start", paddingTop: "50%" }}
           >
             <Text className="primary-0" size={"lg"}>
               No todos yet. Add one now!
